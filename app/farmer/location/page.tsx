@@ -64,58 +64,65 @@ export default function FarmerLocationPage() {
     setMandal(value);
   }
 
- async function handleSave() {
-  if (!state || !district || !mandal) {
-    return;
-  }
-
-  const farmerData = localStorage.getItem("krishaksamay-farmer");
-
-  if (!farmerData) {
-    return;
-  }
-
-  try {
-    const farmer = JSON.parse(farmerData);
-
-    if (!farmer?.id) {
+  async function handleSave() {
+    if (!state || !district || !mandal) {
       return;
     }
 
-    const location = {
-      state,
-      stateLabel: locations[state].label,
-      district,
-      districtLabel: locations[state].districts[district].label,
-      mandal,
-      mandalLabel:
-        locations[state].districts[district].mandals[mandal].label,
-    };
+    const farmerData = localStorage.getItem("krishaksamay-farmer");
 
-    const supabase = createClient();
-
-    const { error } = await supabase.rpc("save_farmer_location", {
-      p_farmer_id: farmer.id,
-      p_state: location.stateLabel,
-      p_district: location.districtLabel,
-      p_mandal: location.mandalLabel,
-    });
-
-    if (error) {
-      console.error("Save farmer location error:", error);
+    if (!farmerData) {
       return;
     }
 
-    localStorage.setItem(
-      "krishaksamay-farmer-location",
-      JSON.stringify(location)
-    );
+    try {
+      const farmer = JSON.parse(farmerData);
 
-    window.location.href = "/farmer/dashboard";
-  } catch (error) {
-    console.error("Location save error:", error);
+      if (!farmer?.id) {
+        return;
+      }
+
+      const selectedMandal = Object.entries(
+        locations[state].districts[district].mandals
+      ).find(([key]) => key === mandal)?.[1];
+
+      if (!selectedMandal) {
+        return;
+      }
+
+      const location = {
+        state,
+        stateLabel: locations[state].label,
+        district,
+        districtLabel: locations[state].districts[district].label,
+        mandal,
+        mandalLabel: selectedMandal.label,
+      };
+
+      const supabase = createClient();
+
+      const { error } = await supabase.rpc("save_farmer_location", {
+        p_farmer_id: farmer.id,
+        p_state: location.stateLabel,
+        p_district: location.districtLabel,
+        p_mandal: location.mandalLabel,
+      });
+
+      if (error) {
+        console.error("Save farmer location error:", error);
+        return;
+      }
+
+      localStorage.setItem(
+        "krishaksamay-farmer-location",
+        JSON.stringify(location)
+      );
+
+      window.location.href = "/farmer/dashboard";
+    } catch (error) {
+      console.error("Location save error:", error);
+    }
   }
-}
 
   return (
     <main className="min-h-screen bg-[#f6f8f3] px-4 py-6 text-stone-900">

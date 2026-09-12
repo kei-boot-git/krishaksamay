@@ -168,10 +168,21 @@ export default function CenterDetailsPage() {
         return;
       }
 
-      setCenter(data as Center);
+      const normalizedCenter: Center = {
+        ...data,
+        center_operations:
+          data.center_operations?.[0] ?? null,
+        center_crops:
+          data.center_crops?.map((item) => ({
+            ...item,
+            crops: item.crops?.[0] ?? null,
+          })) ?? [],
+      };
+
+      setCenter(normalizedCenter);
 
       const firstCrop =
-        data.center_crops?.[0]?.crops;
+        normalizedCenter.center_crops?.[0]?.crops;
 
       if (firstCrop?.name) {
         setSelectedCrop(firstCrop.name);
@@ -198,6 +209,9 @@ export default function CenterDetailsPage() {
   useEffect(() => {
     if (!center || !token) return;
 
+    const currentCenterId = center.id;
+    const currentTokenId = token.token_id;
+
     async function refreshQueuePosition() {
       const {
         data: sessionData,
@@ -205,7 +219,7 @@ export default function CenterDetailsPage() {
       } = await supabase
         .from("queue_sessions")
         .select("id")
-        .eq("center_id", center.id)
+        .eq("center_id", currentCenterId)
         .eq(
           "queue_date",
           new Date()
@@ -235,7 +249,7 @@ export default function CenterDetailsPage() {
       const queue = data as QueueToken[];
 
       const currentToken = queue.find(
-        (item) => item.id === token.token_id
+        (item) => item.id === currentTokenId
       );
 
       if (!currentToken) return;

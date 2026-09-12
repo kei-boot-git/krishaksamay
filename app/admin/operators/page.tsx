@@ -74,9 +74,15 @@ export default function AdminOperatorsPage() {
       );
     }
 
-    if (!operatorError && operatorData) {
-      setOperators(operatorData as Operator[]);
-    }
+   if (!operatorError && operatorData) {
+  setOperators(
+    operatorData.map((operator) => ({
+      ...operator,
+      procurement_centers:
+        operator.procurement_centers?.[0] ?? null,
+    })) as Operator[]
+  );
+}
 
     if (!centerError && centerData) {
       setCenters(centerData as Center[]);

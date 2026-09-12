@@ -290,12 +290,17 @@ export default function OperatorDashboard() {
       });
 
     if (tokenError) {
-      setError(tokenError.message);
-    } else {
-      setTokens(
-        (tokenData || []) as Token[]
-      );
-    }
+  setError(tokenError.message);
+} else {
+  const normalizedTokens: Token[] = (tokenData || []).map(
+    (token) => ({
+      ...token,
+      crop: token.crop?.[0] ?? null,
+    })
+  ) as Token[];
+
+  setTokens(normalizedTokens);
+}
 
     setLoading(false);
   }

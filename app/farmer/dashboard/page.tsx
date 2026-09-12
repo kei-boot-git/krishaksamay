@@ -114,7 +114,18 @@ export default function FarmerDashboard() {
       console.log("Supabase error:", error);
 
       if (!error && data) {
-        setCenters(data as Center[]);
+        const normalizedCenters: Center[] = data.map((center) => ({
+          ...center,
+          center_operations:
+            center.center_operations?.[0] ?? null,
+          center_crops:
+            center.center_crops?.map((centerCrop) => ({
+              ...centerCrop,
+              crops: centerCrop.crops?.[0] ?? null,
+            })) ?? [],
+        })) as Center[];
+
+        setCenters(normalizedCenters);
       }
 
       setLoading(false);
