@@ -38,7 +38,7 @@ type Center = {
   district: string;
   mandal: string;
   is_active: boolean;
-  center_operations: CenterOperation | null;
+  center_operations: CenterOperation | CenterOperation[] | null;
   center_crops: CenterCrop[];
 };
 

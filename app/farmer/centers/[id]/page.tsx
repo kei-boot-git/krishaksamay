@@ -171,11 +171,11 @@ export default function CenterDetailsPage() {
       const normalizedCenter: Center = {
         ...data,
         center_operations:
-          data.center_operations?.[0] ?? null,
+          data.center_operations ?? null,
         center_crops:
           data.center_crops?.map((item) => ({
             ...item,
-            crops: item.crops?.[0] ?? null,
+            crops: item.crops ?? null,
           })) ?? [],
       };
 
