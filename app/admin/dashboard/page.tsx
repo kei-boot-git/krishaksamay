@@ -83,12 +83,14 @@ export default function AdminDashboard() {
       );
     }
 
-    setCenters(
-      (centerData || []).map((center) => ({
-        ...center,
-        center_operations: center.center_operations?.[0] ?? null,
-      })) as Center[]
-    );
+   setCenters(
+  (centerData || []).map((center) => ({
+    ...center,
+    center_operations: Array.isArray(center.center_operations)
+      ? center.center_operations[0] ?? null
+      : center.center_operations ?? null,
+  })) as Center[]
+);
 
     setOperators((operatorData || []) as Operator[]);
     setLoading(false);

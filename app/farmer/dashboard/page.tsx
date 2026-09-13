@@ -117,11 +117,11 @@ export default function FarmerDashboard() {
         const normalizedCenters: Center[] = data.map((center) => ({
           ...center,
           center_operations:
-            center.center_operations?.[0] ?? null,
+            center.center_operations ?? null,
           center_crops:
             center.center_crops?.map((centerCrop) => ({
               ...centerCrop,
-              crops: centerCrop.crops?.[0] ?? null,
+              crops: centerCrop.crops ?? null,
             })) ?? [],
         })) as Center[];
 
