@@ -213,116 +213,110 @@ const normalizedCenter: Center = {
   /*
    * Keep the farmer's token status and queue position live.
    */
-  useEffect(() => {
-    if (!center || !token) return;
+ useEffect(() => {
+  if (!center || !token || !center.center_operations?.is_open) return;
 
-    const currentCenterId = center.id;
-    const currentTokenId = token.token_id;
+  const currentCenterId = center.id;
+  const currentTokenId = token.token_id;
 
-    async function refreshQueuePosition() {
-      const {
-        data: sessionData,
-        error: sessionError,
-      } = await supabase
-        .from("queue_sessions")
-        .select("id")
-        .eq("center_id", currentCenterId)
-        .eq(
-          "queue_date",
-          new Date()
-            .toISOString()
-            .slice(0, 10)
-        )
-        .eq("is_active", true)
-        .single();
+  async function refreshQueuePosition() {
+    const {
+      data: sessionData,
+      error: sessionError,
+    } = await supabase
+      .from("queue_sessions")
+      .select("id")
+      .eq("center_id", currentCenterId)
+      .eq(
+        "queue_date",
+        new Date()
+          .toISOString()
+          .slice(0, 10)
+      )
+      .eq("is_active", true)
+      .single();
 
-      if (sessionError || !sessionData) return;
+    if (sessionError || !sessionData) return;
 
-      const { data, error } = await supabase
-        .from("queue_tokens")
-        .select(
-          "id, token_number, status"
-        )
-        .eq(
-          "queue_session_id",
-          sessionData.id
-        )
-        .order("token_number", {
-          ascending: true,
-        });
-
-      if (error || !data) return;
-
-      const queue = data as QueueToken[];
-
-      const currentToken = queue.find(
-        (item) => item.id === currentTokenId
-      );
-
-      if (!currentToken) return;
-
-      /*
-       * Tokens still ahead of the farmer.
-       */
-      const peopleAhead = queue.filter(
-        (item) =>
-          item.token_number <
-            currentToken.token_number &&
-          (
-            item.status === "WAITING" ||
-            item.status === "CALLED" ||
-            item.status === "SERVING"
-          )
-      ).length;
-
-      setToken((previous) => {
-        if (!previous) return previous;
-
-        const updated = {
-          ...previous,
-          people_ahead: peopleAhead,
-          token_number: currentToken.token_number,
-          status: currentToken.status,
-        };
-
-        const farmerData =
-          localStorage.getItem(
-            "krishaksamay-farmer"
-          );
-
-        if (farmerData) {
-          try {
-            const farmer = JSON.parse(
-              farmerData
-            );
-
-            if (farmer?.id) {
-              localStorage.setItem(
-                `farmer_token_${farmer.id}_${centerId}`,
-                JSON.stringify(updated)
-              );
-            }
-          } catch {
-            // Ignore invalid farmer data.
-          }
-        }
-
-        return updated;
+    const { data, error } = await supabase
+      .from("queue_tokens")
+      .select(
+        "id, token_number, status"
+      )
+      .eq(
+        "queue_session_id",
+        sessionData.id
+      )
+      .order("token_number", {
+        ascending: true,
       });
-    }
 
-    refreshQueuePosition();
+    if (error || !data) return;
 
-    /*
-     * MVP live refresh every 10 seconds.
-     */
-    const interval = setInterval(
-      refreshQueuePosition,
-      10000
+    const queue = data as QueueToken[];
+
+    const currentToken = queue.find(
+      (item) => item.id === currentTokenId
     );
 
-    return () => clearInterval(interval);
-  }, [center, token?.token_id, centerId]);
+    if (!currentToken) return;
+
+    const peopleAhead = queue.filter(
+      (item) =>
+        item.token_number <
+          currentToken.token_number &&
+        (
+          item.status === "WAITING" ||
+          item.status === "CALLED" ||
+          item.status === "SERVING"
+        )
+    ).length;
+
+    setToken((previous) => {
+      if (!previous) return previous;
+
+      const updated = {
+        ...previous,
+        people_ahead: peopleAhead,
+        token_number: currentToken.token_number,
+        status: currentToken.status,
+      };
+
+      const farmerData =
+        localStorage.getItem(
+          "krishaksamay-farmer"
+        );
+
+      if (farmerData) {
+        try {
+          const farmer = JSON.parse(
+            farmerData
+          );
+
+          if (farmer?.id) {
+            localStorage.setItem(
+              `farmer_token_${farmer.id}_${centerId}`,
+              JSON.stringify(updated)
+            );
+          }
+        } catch {
+          // Ignore invalid farmer data.
+        }
+      }
+
+      return updated;
+    });
+  }
+
+  refreshQueuePosition();
+
+  const interval = setInterval(
+    refreshQueuePosition,
+    10000
+  );
+
+  return () => clearInterval(interval);
+}, [center, token?.token_id, centerId]);
 
   async function handleGetToken() {
     setError("");
@@ -715,7 +709,7 @@ const normalizedCenter: Center = {
         )}
 
         {/* Token result */}
-        {token && (
+        {token && open && (
           <section className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-5">
 
             <div className="text-center">
