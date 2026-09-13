@@ -38,7 +38,7 @@ type Center = {
   district: string;
   mandal: string;
   is_active: boolean;
-  center_operations: CenterOperation | CenterOperation[] | null;
+  center_operations: CenterOperation | null;
   center_crops: CenterCrop[];
 };
 
@@ -114,16 +114,25 @@ export default function FarmerDashboard() {
       console.log("Supabase error:", error);
 
       if (!error && data) {
-        const normalizedCenters: Center[] = data.map((center) => ({
-          ...center,
-          center_operations:
-            center.center_operations ?? null,
-          center_crops:
-            center.center_crops?.map((centerCrop) => ({
-              ...centerCrop,
-              crops: centerCrop.crops ?? null,
-            })) ?? [],
-        })) as Center[];
+        const normalizedCenters: Center[] = data.map((center) => {
+  const rawOperations = center.center_operations as unknown;
+
+  const centerOperations: CenterOperation | null =
+    Array.isArray(rawOperations)
+      ? (rawOperations[0] as CenterOperation | undefined) ?? null
+      : (rawOperations as CenterOperation | null);
+
+  return {
+    ...center,
+    center_operations: centerOperations,
+    center_crops:
+      center.center_crops?.map((centerCrop) => ({
+        ...centerCrop,
+        crops: centerCrop.crops?.[0] ?? null,
+      })) ?? [],
+  };
+});
+   
 
         setCenters(normalizedCenters);
       }

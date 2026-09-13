@@ -168,17 +168,24 @@ export default function CenterDetailsPage() {
         return;
       }
 
-      const normalizedCenter: Center = {
-        ...data,
-        center_operations:
-          data.center_operations ?? null,
-        center_crops:
-          data.center_crops?.map((item) => ({
-            ...item,
-            crops: item.crops ?? null,
-          })) ?? [],
-      };
+      const rawOperations = data.center_operations as unknown;
 
+const centerOperations: CenterOperation | null =
+  Array.isArray(rawOperations)
+    ? (rawOperations[0] as CenterOperation | undefined) ?? null
+    : (rawOperations as CenterOperation | null);
+
+const normalizedCenter: Center = {
+  ...data,
+  center_operations: centerOperations,
+  center_crops:
+    data.center_crops?.map((item) => ({
+      ...item,
+      crops: Array.isArray(item.crops)
+        ? item.crops[0] ?? null
+        : item.crops ?? null,
+    })) ?? [],
+};
       setCenter(normalizedCenter);
 
       const firstCrop =
